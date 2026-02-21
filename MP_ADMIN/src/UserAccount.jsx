@@ -1,9 +1,25 @@
-import { useEffect, useRef } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 const accounts = [
-  { name: 'Arjun Constructions', contact: 'arjun@mpd.com • +91 98765 44112', leadId: 'LD-1021', payment: 'Completed', role: 'Manager', status: 'Active' },
-  { name: 'BlueStone Infra', contact: 'bluestone@mpd.com • +91 98765 99211', leadId: 'LD-1088', payment: 'Pending', role: 'Partner', status: 'Review' },
-  { name: 'Northline Build', contact: 'northline@mpd.com • +91 98765 33318', leadId: 'LD-1140', payment: 'Completed', role: 'Partner', status: 'Active' },
+  { id: 'row-1' },
+  { id: 'row-2' },
+  { id: 'row-3' },
+  { id: 'row-4' },
+]
+
+const addUserOptions = [
+  'Add Superadmin',
+  'Add Administrator',
+  'Add CRM User',
+  'Add Sales Head',
+  'Add Sales User',
+  'Add Channel Partner Manager',
+  'Add Channel Partner Head',
+  'Add GRE or Pre-sales',
+  'Add Billing Team',
+  'Add Customer Account',
+  'Add Employee',
+  'Add Management User',
 ]
 
 function IconUsers() {
@@ -31,6 +47,7 @@ function IconFilter() {
 }
 
 function UserAccount() {
+  const [isAddUserOpen, setIsAddUserOpen] = useState(false)
   const pageRef = useRef(null)
   const headerRef = useRef(null)
   const controlsRef = useRef(null)
@@ -38,6 +55,33 @@ function UserAccount() {
   const glowRefs = useRef([])
   const rowRefs = useRef([])
   const beamRef = useRef(null)
+  const addUserMenuRef = useRef(null)
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (!addUserMenuRef.current) {
+        return
+      }
+      if (!addUserMenuRef.current.contains(event.target)) {
+        setIsAddUserOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [])
+
+  useEffect(() => {
+    if (!window.gsap || !isAddUserOpen) {
+      return
+    }
+
+    window.gsap.fromTo(
+      '.ua-add-user-menu',
+      { y: -8, opacity: 0, scale: 0.98 },
+      { y: 0, opacity: 1, scale: 1, duration: 0.22, ease: 'power2.out' },
+    )
+  }, [isAddUserOpen])
 
   useEffect(() => {
     if (!window.gsap) {
@@ -80,28 +124,102 @@ function UserAccount() {
       cleanups.push(() => sweep.kill())
     }
 
-    rowRefs.current.filter(Boolean).forEach((row) => {
+    rowRefs.current.filter(Boolean).forEach((row, index) => {
+      const onEnter = () => {
+        gsap.to(row, {
+          y: -6,
+          rotateX: -5,
+          rotateY: index % 2 ? -5 : 5,
+          scale: 1.01,
+          boxShadow: '0 18px 34px rgba(235,122,38,0.22)',
+          duration: 0.35,
+          ease: 'power2.out',
+        })
+      }
+
       const onMove = (event) => {
         const rect = row.getBoundingClientRect()
         const x = (event.clientX - rect.left) / rect.width - 0.5
         const y = (event.clientY - rect.top) / rect.height - 0.5
         gsap.to(row, {
-          rotateY: x * 8,
-          rotateX: -y * 6,
-          y: -4,
+          rotateY: x * 16,
+          rotateX: -y * 12,
+          transformPerspective: 1200,
           duration: 0.2,
+          ease: 'power1.out',
+        })
+      }
+
+      const onLeave = () => {
+        gsap.to(row, {
+          rotateY: 0,
+          rotateX: 0,
+          y: 0,
+          scale: 1,
+          boxShadow: '0 0 0 rgba(0,0,0,0)',
+          duration: 0.35,
+          ease: 'power2.out',
+        })
+      }
+
+      const onDown = () => {
+        gsap.to(row, { scale: 0.995, duration: 0.12, ease: 'power1.out' })
+      }
+
+      const onUp = () => {
+        gsap.to(row, { scale: 1.01, duration: 0.12, ease: 'power1.out' })
+      }
+
+      row.addEventListener('mouseenter', onEnter)
+      row.addEventListener('mousemove', onMove)
+      row.addEventListener('mouseleave', onLeave)
+      row.addEventListener('mousedown', onDown)
+      row.addEventListener('mouseup', onUp)
+      cleanups.push(() => row.removeEventListener('mouseenter', onEnter))
+      cleanups.push(() => row.removeEventListener('mousemove', onMove))
+      cleanups.push(() => row.removeEventListener('mouseleave', onLeave))
+      cleanups.push(() => row.removeEventListener('mousedown', onDown))
+      cleanups.push(() => row.removeEventListener('mouseup', onUp))
+    })
+
+    const controlButtons = gsap.utils.toArray('.ua-control')
+    controlButtons.forEach((button) => {
+      const onEnter = () => {
+        gsap.to(button, {
+          y: -2,
+          scale: 1.02,
+          boxShadow: '0 12px 22px rgba(32,120,220,0.3)',
+          duration: 0.24,
           ease: 'power2.out',
         })
       }
 
       const onLeave = () => {
-        gsap.to(row, { rotateY: 0, rotateX: 0, y: 0, duration: 0.3, ease: 'power2.out' })
+        gsap.to(button, {
+          y: 0,
+          scale: 1,
+          boxShadow: '0 0 0 rgba(0,0,0,0)',
+          duration: 0.24,
+          ease: 'power2.out',
+        })
       }
 
-      row.addEventListener('mousemove', onMove)
-      row.addEventListener('mouseleave', onLeave)
-      cleanups.push(() => row.removeEventListener('mousemove', onMove))
-      cleanups.push(() => row.removeEventListener('mouseleave', onLeave))
+      const onDown = () => {
+        gsap.to(button, { scale: 0.97, duration: 0.12, ease: 'power1.out' })
+      }
+
+      const onUp = () => {
+        gsap.to(button, { scale: 1.02, duration: 0.12, ease: 'power1.out' })
+      }
+
+      button.addEventListener('mouseenter', onEnter)
+      button.addEventListener('mouseleave', onLeave)
+      button.addEventListener('mousedown', onDown)
+      button.addEventListener('mouseup', onUp)
+      cleanups.push(() => button.removeEventListener('mouseenter', onEnter))
+      cleanups.push(() => button.removeEventListener('mouseleave', onLeave))
+      cleanups.push(() => button.removeEventListener('mousedown', onDown))
+      cleanups.push(() => button.removeEventListener('mouseup', onUp))
     })
 
     return () => cleanups.forEach((fn) => fn())
@@ -117,8 +235,8 @@ function UserAccount() {
       </div>
 
       <section className="relative z-10 mx-auto w-full max-w-7xl px-3 py-8 lg:px-6">
-        <div ref={headerRef} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/70 bg-white/75 px-4 py-4 shadow-xl shadow-[#2f3fa9]/10 backdrop-blur-xl">
-          <h1 className="flex items-center gap-3 text-3xl font-semibold tracking-tight text-[#1f2f45]">
+        <div ref={headerRef} className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/70 bg-white/75 px-4 py-4 shadow-xl shadow-[#2f3fa9]/10 backdrop-blur-xl">
+          <h1 className="flex items-center gap-3 text-2xl font-semibold tracking-tight text-[#1f2f45] lg:text-3xl">
             <span className="text-[#2f3fa9]"><IconUsers /></span>
             {'Users Accounts'.split('').map((ch, idx) => (
               <span key={`${ch}-${idx}`} className="ua-title-char inline-block">
@@ -128,23 +246,43 @@ function UserAccount() {
           </h1>
 
           <div ref={controlsRef} className="flex flex-wrap items-center gap-3">
-            <button type="button" className="ua-control rounded-lg border border-[#6d64f8]/70 bg-white px-6 py-2.5 text-2xl font-semibold text-[#6d64f8]">
+            <button type="button" className="ua-control rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] px-5 py-2 text-base font-semibold text-white lg:text-lg">
               Total : 0
             </button>
-            <button type="button" className="ua-control flex items-center gap-1 rounded-lg border border-[#6d64f8]/70 bg-white px-6 py-2.5 text-2xl font-semibold text-[#6d64f8]">
-              Add User <IconChevron />
-            </button>
-            <button type="button" className="ua-control flex items-center gap-1 rounded-lg border border-[#6d64f8]/70 bg-white px-6 py-2.5 text-2xl font-semibold text-[#6d64f8]">
+            <div ref={addUserMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsAddUserOpen((prev) => !prev)}
+                className="ua-control flex items-center gap-1 rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] px-5 py-2 text-base font-semibold text-white lg:text-lg"
+              >
+                Add User <IconChevron />
+              </button>
+              {isAddUserOpen && (
+                <div className="ua-add-user-menu absolute left-0 top-12 z-[70] w-72 rounded-xl border border-[#d4e3f8] bg-[#f8fbff] p-2 shadow-2xl shadow-[#1e78c8]/25">
+                  {addUserOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setIsAddUserOpen(false)}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#2f3e57] transition hover:bg-[#e8f1ff] hover:text-[#124785]"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button type="button" className="ua-control flex items-center gap-1 rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] px-5 py-2 text-base font-semibold text-white lg:text-lg">
               Exports <IconChevron />
             </button>
-            <button type="button" className="ua-control rounded-lg border border-[#8ea1c4] bg-white p-2.5 text-[#6d64f8]">
+            <button type="button" className="ua-control rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] p-2.5 text-white">
               <IconFilter />
             </button>
           </div>
         </div>
 
         <div ref={tableRef} className="mt-6 overflow-hidden rounded-2xl border border-[#6d64f8]/20 bg-white/70 shadow-2xl shadow-[#2f3fa9]/12 backdrop-blur-xl">
-          <div className="grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr_0.8fr] bg-[linear-gradient(90deg,#646ff6_0%,#7b65e5_45%,#9b5fd4_100%)] text-xl font-bold tracking-wide text-white">
+          <div className="grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr_0.8fr] bg-[linear-gradient(90deg,#124785_0%,#1e78c8_56%,#30a7c2_100%)] text-sm font-bold tracking-wide text-white lg:text-base">
             <div className="px-6 py-5">Name/Email/Phone</div>
             <div className="px-6 py-5">Sell.Do Lead ID</div>
             <div className="px-6 py-5">Payment</div>
@@ -156,27 +294,21 @@ function UserAccount() {
           <div className="divide-y divide-[#dbe4f7] bg-white/90">
             {accounts.map((row, index) => (
               <div
-                key={row.leadId}
+                key={row.id}
                 ref={(node) => {
                   rowRefs.current[index] = node
                 }}
                 className="ua-row grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr_0.8fr] px-2 py-2 [transform-style:preserve-3d]"
               >
                 <div className="px-4 py-3">
-                  <p className="text-lg font-semibold text-[#213a64]">{row.name}</p>
-                  <p className="text-sm text-[#6e83a6]">{row.contact}</p>
+                  <p className="text-lg font-semibold text-[#213a64]">&nbsp;</p>
+                  <p className="text-sm text-[#6e83a6]">&nbsp;</p>
                 </div>
-                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">{row.leadId}</div>
-                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">{row.payment}</div>
-                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">{row.role}</div>
-                <div className="px-4 py-3">
-                  <span className="rounded-full bg-[#e6f8ef] px-3 py-1 text-sm font-bold text-[#1b8f59]">{row.status}</span>
-                </div>
-                <div className="px-4 py-3">
-                  <button type="button" className="rounded-md border border-[#c8d7f0] px-3 py-1 text-sm font-semibold text-[#3e5f95]">
-                    View
-                  </button>
-                </div>
+                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">&nbsp;</div>
+                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">&nbsp;</div>
+                <div className="px-4 py-3 text-base font-semibold text-[#344f7f]">&nbsp;</div>
+                <div className="px-4 py-3">&nbsp;</div>
+                <div className="px-4 py-3">&nbsp;</div>
               </div>
             ))}
           </div>
