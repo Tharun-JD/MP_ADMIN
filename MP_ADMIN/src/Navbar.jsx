@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 function Icon({ name, className = 'h-4 w-4' }) {
   const icons = {
@@ -57,112 +57,380 @@ function Navbar({
   onOpenUserAccount,
   onOpenLeadActive,
   onOpenChannelPartners,
+  onOpenEmails,
+  onOpenSms,
   onSignOut,
   className = '',
 }) {
   const [openMenu, setOpenMenu] = useState(null)
   const [openWelcome, setOpenWelcome] = useState(false)
+  const [isProfileOpen, setIsProfileOpen] = useState(false)
+  const [isPasswordOpen, setIsPasswordOpen] = useState(false)
+  const [profileValues, setProfileValues] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    timeZone: '(GMT+05:30) Mumbai',
+  })
+  const [passwordValues, setPasswordValues] = useState({
+    Newpassword: '',
+    confirmPassword: '',
+  })
+  const welcomeMenuRef = useRef(null)
+  const profilePanelRef = useRef(null)
+  const passwordPanelRef = useRef(null)
+
+  useEffect(() => {
+    const onPointerDown = (event) => {
+      if (welcomeMenuRef.current && !welcomeMenuRef.current.contains(event.target)) {
+        setOpenWelcome(false)
+      }
+      if (profilePanelRef.current && !profilePanelRef.current.contains(event.target)) {
+        setIsProfileOpen(false)
+      }
+      if (passwordPanelRef.current && !passwordPanelRef.current.contains(event.target)) {
+        setIsPasswordOpen(false)
+      }
+    }
+
+    document.addEventListener('mousedown', onPointerDown)
+    return () => document.removeEventListener('mousedown', onPointerDown)
+  }, [])
+
+  useEffect(() => {
+    if (!window.gsap || !isProfileOpen || !profilePanelRef.current) {
+      return
+    }
+
+    const gsap = window.gsap
+    const panel = profilePanelRef.current
+    const fields = panel.querySelectorAll('.cmp-field')
+    const accents = panel.querySelectorAll('.cmp-accent')
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    tl
+      .fromTo('.cmp-overlay', { opacity: 0 }, { opacity: 1, duration: 0.24 })
+      .fromTo(
+        panel,
+        { y: 36, opacity: 0, scale: 1.08, rotateX: -8, transformOrigin: '50% 0%' },
+        { y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.42 },
+        '-=0.06',
+      )
+      .fromTo(fields, { y: 14, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.035, duration: 0.22 }, '-=0.24')
+      .fromTo(accents, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 0.55, stagger: 0.06, duration: 0.32 }, '-=0.35')
+
+    return () => tl.kill()
+  }, [isProfileOpen])
+
+  useEffect(() => {
+    if (!window.gsap || !isPasswordOpen || !passwordPanelRef.current) {
+      return
+    }
+
+    const gsap = window.gsap
+    const panel = passwordPanelRef.current
+    const fields = panel.querySelectorAll('.cpp-field')
+    const accents = panel.querySelectorAll('.cpp-accent')
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    tl
+      .fromTo('.cpp-overlay', { opacity: 0 }, { opacity: 1, duration: 0.24 })
+      .fromTo(
+        panel,
+        { y: 34, opacity: 0, scale: 1.06, rotateX: -7, transformOrigin: '50% 0%' },
+        { y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.42 },
+        '-=0.06',
+      )
+      .fromTo(fields, { y: 12, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.22 }, '-=0.24')
+      .fromTo(accents, { scale: 0.6, opacity: 0 }, { scale: 1, opacity: 0.55, stagger: 0.06, duration: 0.3 }, '-=0.35')
+
+    return () => tl.kill()
+  }, [isPasswordOpen])
+
+  const setProfileField = (field, value) => {
+    setProfileValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const setPasswordField = (field, value) => {
+    setPasswordValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const handleChangePassword = () => {
+    if (!passwordValues.password || !passwordValues.confirmPassword) {
+      window.alert('Please fill both password fields.')
+      return
+    }
+    if (passwordValues.password !== passwordValues.confirmPassword) {
+      window.alert('Password and confirmation do not match.')
+      return
+    }
+    setPasswordValues({ password: '', confirmPassword: '' })
+    setIsPasswordOpen(false)
+  }
 
   return (
-    <header className={`${className} sticky top-0 z-[200] border-b border-[#2f3fa9]/10 bg-white/85 backdrop-blur overflow-visible`}>
-      <div className="pointer-events-none absolute inset-0 overflow-hidden">
-        <div className="absolute -left-16 top-0 h-full w-[26rem] rotate-[4deg] bg-gradient-to-r from-transparent via-[#2f3fa9]/18 to-transparent blur-xl" />
-        <div className="absolute right-0 top-0 h-full w-[22rem] rotate-[-3deg] bg-gradient-to-r from-transparent via-[#1a79d1]/14 to-transparent blur-xl" />
-      </div>
-      <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-4 overflow-visible px-4 py-4 lg:px-6">
-        <div className="text-xl font-black tracking-tight text-[#2f3fa9]">MP Developers</div>
-
-        <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
-          {navItems.map((item) => (
-            <div key={item.label} className="relative">
-              <button
-                type="button"
-                onClick={() => {
-                  setOpenWelcome(false)
-                  if (item.label === 'More') {
-                    setOpenMenu((current) => (current === item.label ? null : item.label))
-                    return
-                  }
-                  setOpenMenu(null)
-                  if (item.label === 'Dashbord') onBackToDashboard?.()
-                  if (item.label === 'UserAccount') onOpenUserAccount?.()
-                  if (item.label === 'Lead Activity') onOpenLeadActive?.()
-                }}
-                className={`nav-btn flex items-center gap-1.5 rounded-lg border border-[#2f3fa9]/15 bg-white px-3 py-2 text-sm font-semibold transition hover:border-[#1a79d1]/50 hover:text-[#1a79d1] ${
-                  (activePage === 'dashboard' && item.label === 'Dashbord') ||
-                  (activePage === 'user-account' && item.label === 'UserAccount') ||
-                  (activePage === 'lead-active' && item.label === 'Lead Activity') ||
-                  (activePage === 'channel-partners' && item.label === 'More')
-                    ? 'text-[#1a79d1]'
-                    : 'text-[#1a3c6b]'
-                }`}
-              >
-                <Icon name={item.icon} className="h-4 w-4" />
-                {item.label}
-                {item.label === 'More' && <Icon name="chevron" className="h-3 w-3" />}
-              </button>
-
-              {item.label === 'More' && openMenu === item.label && (
-                <div className="absolute left-0 top-12 z-[260] min-w-44 rounded-xl border border-[#d5e3f7] bg-white p-2 shadow-xl">
-                  {item.options.map((option) => (
-                    <button
-                      key={option.label}
-                      type="button"
-                      onClick={() => {
-                        setOpenMenu(null)
-                        if (option.label === 'Channel Partner Application') {
-                          onOpenChannelPartners?.()
-                        }
-                      }}
-                      className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
-                    >
-                      <Icon name={option.icon} className="h-4 w-4 text-[#1a79d1]" />
-                      {option.label}
-                    </button>
-                  ))}
-                </div>
-              )}
-            </div>
-          ))}
-        </nav>
-
-        <div className="relative">
-          <button
-            type="button"
-            onClick={() => {
-              setOpenMenu(null)
-              setOpenWelcome((current) => !current)
-            }}
-            className="nav-btn flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1a79d1] to-[#2f3fa9] px-4 py-2 text-sm font-bold text-white shadow-lg shadow-[#2f3fa9]/20"
-          >
-            <Icon name="user" className="h-4 w-4" />
-            Welcome
-            <Icon name="chevron" className="h-3 w-3" />
-          </button>
-
-          {openWelcome && (
-            <div className="absolute right-0 top-12 z-[260] min-w-48 rounded-xl border border-[#d5e3f7] bg-white p-2 shadow-xl">
-              <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]">
-                <Icon name="profile" className="h-4 w-4 text-[#1a79d1]" />
-                My Profile
-              </button>
-              <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]">
-                <Icon name="settings" className="h-4 w-4 text-[#1a79d1]" />
-                Settings
-              </button>
-              <button
-                type="button"
-                onClick={onSignOut}
-                className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-[#c43d2f] hover:bg-[#fff1ef]"
-              >
-                <Icon name="signout" className="h-4 w-4" />
-                Sign Out
-              </button>
-            </div>
-          )}
+    <>
+      <header className={`${className} sticky top-0 z-[200] border-b border-[#2f3fa9]/10 bg-white/85 backdrop-blur overflow-visible`}>
+        <div className="pointer-events-none absolute inset-0 overflow-hidden">
+          <div className="absolute -left-16 top-0 h-full w-[26rem] rotate-[4deg] bg-gradient-to-r from-transparent via-[#2f3fa9]/18 to-transparent blur-xl" />
+          <div className="absolute right-0 top-0 h-full w-[22rem] rotate-[-3deg] bg-gradient-to-r from-transparent via-[#1a79d1]/14 to-transparent blur-xl" />
         </div>
-      </div>
-    </header>
+        <div className="relative mx-auto flex w-full max-w-7xl items-center justify-between gap-4 overflow-visible px-4 py-4 lg:px-6">
+          <div className="text-xl font-black tracking-tight text-[#2f3fa9]">MP Developers</div>
+
+          <nav className="flex flex-wrap items-center gap-2 lg:gap-3">
+            {navItems.map((item) => (
+              <div key={item.label} className="relative">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenWelcome(false)
+                    if (item.label === 'More') {
+                      setOpenMenu((current) => (current === item.label ? null : item.label))
+                      return
+                    }
+                    setOpenMenu(null)
+                    if (item.label === 'Dashbord') onBackToDashboard?.()
+                    if (item.label === 'UserAccount') onOpenUserAccount?.()
+                    if (item.label === 'Lead Activity') onOpenLeadActive?.()
+                  }}
+                  className={`nav-btn flex items-center gap-1.5 rounded-lg border border-[#2f3fa9]/15 bg-white px-3 py-2 text-sm font-semibold transition hover:border-[#1a79d1]/50 hover:text-[#1a79d1] ${
+                    (activePage === 'dashboard' && item.label === 'Dashbord') ||
+                    (activePage === 'user-account' && item.label === 'UserAccount') ||
+                    (activePage === 'lead-active' && item.label === 'Lead Activity') ||
+                    ((activePage === 'channel-partners' || activePage === 'emails' || activePage === 'sms') && item.label === 'More')
+                      ? 'text-[#1a79d1]'
+                      : 'text-[#1a3c6b]'
+                  }`}
+                >
+                  <Icon name={item.icon} className="h-4 w-4" />
+                  {item.label}
+                  {item.label === 'More' && <Icon name="chevron" className="h-3 w-3" />}
+                </button>
+
+                {item.label === 'More' && openMenu === item.label && (
+                  <div className="absolute left-0 top-12 z-[260] min-w-44 rounded-xl border border-[#d5e3f7] bg-white p-2 shadow-xl">
+                    {item.options.map((option) => (
+                      <button
+                        key={option.label}
+                        type="button"
+                        onClick={() => {
+                          setOpenMenu(null)
+                          if (option.label === 'Channel Partner Application') {
+                            onOpenChannelPartners?.()
+                          }
+                          if (option.label === 'Emails') {
+                            onOpenEmails?.()
+                          }
+                          if (option.label === 'SMSs') {
+                            onOpenSms?.()
+                          }
+                        }}
+                        className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
+                      >
+                        <Icon name={option.icon} className="h-4 w-4 text-[#1a79d1]" />
+                        {option.label}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            ))}
+          </nav>
+
+          <div ref={welcomeMenuRef} className="relative">
+            <button
+              type="button"
+              onClick={() => {
+                setOpenMenu(null)
+                setOpenWelcome((current) => !current)
+              }}
+              className="nav-btn flex items-center gap-1.5 rounded-xl bg-gradient-to-r from-[#1a79d1] to-[#2f3fa9] px-4 py-2 text-sm font-bold text-white shadow-lg shadow-[#2f3fa9]/20"
+            >
+              <Icon name="user" className="h-4 w-4" />
+              Welcome
+              <Icon name="chevron" className="h-3 w-3" />
+            </button>
+
+            {openWelcome && (
+              <div className="absolute right-0 top-12 z-[260] min-w-48 rounded-xl border border-[#d5e3f7] bg-white p-2 shadow-xl">
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenWelcome(false)
+                    setIsProfileOpen(true)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
+                >
+                  <Icon name="profile" className="h-4 w-4 text-[#1a79d1]" />
+                  Channel Manager Profile
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setOpenWelcome(false)
+                    setIsPasswordOpen(true)
+                  }}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
+                >
+                  <Icon name="settings" className="h-4 w-4 text-[#1a79d1]" />
+                  Change Password
+                </button>
+                <button
+                  type="button"
+                  onClick={onSignOut}
+                  className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm font-semibold text-[#c43d2f] hover:bg-[#fff1ef]"
+                >
+                  <Icon name="signout" className="h-4 w-4" />
+                  Sign Out
+                </button>
+              </div>
+            )}
+          </div>
+        </div>
+      </header>
+
+      {isProfileOpen && (
+        <div className="cmp-overlay fixed inset-0 z-[360] flex items-center justify-center bg-[#0a1222]/45 p-3 backdrop-blur-[2px]">
+          <div ref={profilePanelRef} className="relative max-h-[90vh] w-full max-w-4xl overflow-hidden rounded-xl border border-[#8f7bf6]/40 bg-[#f4f6fb] shadow-2xl shadow-[#1a1f5f]/35">
+            <div className="cmp-accent pointer-events-none absolute -left-6 top-6 h-12 w-12 rounded-full bg-[#89a0ff]/40 blur-md" />
+            <div className="cmp-accent pointer-events-none absolute right-10 top-10 h-14 w-14 rounded-full bg-[#e18dff]/35 blur-md" />
+            <div className="flex items-center justify-between bg-[linear-gradient(90deg,#6f7df3_0%,#9d67df_100%)] px-5 py-3.5">
+              <h2 className="cmp-field text-2xl font-semibold text-white">Edit Channel Partner Manager</h2>
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(false)}
+                className="cmp-field text-3xl font-bold leading-none text-white/80 transition hover:text-white"
+              >
+                X
+              </button>
+            </div>
+
+            <div className="grid gap-4 p-5 md:grid-cols-2">
+              <div className="cmp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">First name <span className="text-[#e54848]">*</span></label>
+                <input
+                  type="text"
+                  value={profileValues.firstName}
+                  onChange={(event) => setProfileField('firstName', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                />
+              </div>
+
+              <div className="cmp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">Last name <span className="text-[#e54848]">*</span></label>
+                <input
+                  type="text"
+                  value={profileValues.lastName}
+                  onChange={(event) => setProfileField('lastName', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                />
+              </div>
+
+              <div className="cmp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">Email <span className="text-[#e54848]">*</span></label>
+                <input
+                  type="email"
+                  value={profileValues.email}
+                  onChange={(event) => setProfileField('email', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                />
+              </div>
+
+              <div className="cmp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">Phone <span className="text-[#e54848]">*</span></label>
+                <div className="flex items-center rounded-md border border-[#c6d4ea] bg-white px-3 py-3">
+                  <span className="text-lg">🇮🇳</span>
+                  <span className="mx-2 text-[#61708a]">▼</span>
+                  <input
+                    type="text"
+                    placeholder="+91"
+                    value={profileValues.phone}
+                    onChange={(event) => setProfileField('phone', event.target.value)}
+                    className="w-full border-0 bg-transparent text-xl text-[#2d4568] outline-none"
+                  />
+                </div>
+              </div>
+
+              <div className="cmp-field space-y-2 md:col-span-1">
+                <label className="text-base font-semibold text-[#1f3557]">User&apos;s Time Zone</label>
+                <select
+                  value={profileValues.timeZone}
+                  onChange={(event) => setProfileField('timeZone', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                >
+                  <option>(GMT+05:30) Mumbai</option>
+                  <option>(GMT+00:00) London</option>
+                  <option>(GMT-05:00) New York</option>
+                </select>
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t border-[#d2dbee] bg-white/75 px-5 py-4">
+              <button
+                type="button"
+                onClick={() => setIsProfileOpen(false)}
+                className="cmp-field rounded-md bg-[#1d73ce] px-5 py-2 text-lg font-semibold text-white transition hover:brightness-110"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {isPasswordOpen && (
+        <div className="cpp-overlay fixed inset-0 z-[365] flex items-center justify-center bg-[#0a1222]/45 p-3 backdrop-blur-[2px]">
+          <div ref={passwordPanelRef} className="relative max-h-[88vh] w-full max-w-4xl overflow-hidden rounded-xl border border-[#8f7bf6]/40 bg-[#f4f6fb] shadow-2xl shadow-[#1a1f5f]/35">
+            <div className="cpp-accent pointer-events-none absolute -left-6 top-6 h-12 w-12 rounded-full bg-[#89a0ff]/40 blur-md" />
+            <div className="cpp-accent pointer-events-none absolute right-10 top-10 h-14 w-14 rounded-full bg-[#e18dff]/35 blur-md" />
+            <div className="flex items-center justify-between bg-[linear-gradient(90deg,#6f7df3_0%,#9d67df_100%)] px-5 py-3.5">
+              <h2 className="cpp-field text-2xl font-semibold text-white">Change Password</h2>
+              <button
+                type="button"
+                onClick={() => setIsPasswordOpen(false)}
+                className="cpp-field text-3xl font-bold leading-none text-white/80 transition hover:text-white"
+              >
+                X
+              </button>
+            </div>
+
+            <div className="grid gap-4 p-5">
+              <div className="cpp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">Password <span className="text-[#e54848]">*</span></label>
+                <input
+                  type="password"
+                  value={passwordValues.password}
+                  onChange={(event) => setPasswordField('password', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                />
+              </div>
+
+              <div className="cpp-field space-y-2">
+                <label className="text-base font-semibold text-[#1f3557]">Password Confirmation <span className="text-[#e54848]">*</span></label>
+                <input
+                  type="password"
+                  value={passwordValues.confirmPassword}
+                  onChange={(event) => setPasswordField('confirmPassword', event.target.value)}
+                  className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-xl text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                />
+              </div>
+            </div>
+
+            <div className="flex justify-end border-t border-[#d2dbee] bg-white/75 px-5 py-4">
+              <button
+                type="button"
+                onClick={handleChangePassword}
+                className="cpp-field rounded-md bg-[#1d73ce] px-5 py-2 text-lg font-semibold text-white transition hover:brightness-110"
+              >
+                Change Password
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
   )
 }
 

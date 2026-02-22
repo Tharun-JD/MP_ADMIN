@@ -76,7 +76,7 @@ const navItems = [
   },
 ]
 
-function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners }) {
+function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onOpenEmails, onOpenSms }) {
   const [openMenu, setOpenMenu] = useState(null)
   const [openWelcome, setOpenWelcome] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -519,6 +519,12 @@ function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadA
                           if (option.label === 'Channel Partner Application') {
                             onOpenChannelPartners?.()
                           }
+                          if (option.label === 'Emails') {
+                            onOpenEmails?.()
+                          }
+                          if (option.label === 'SMSs') {
+                            onOpenSms?.()
+                          }
                         }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
                       >
@@ -550,7 +556,7 @@ function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadA
               <div className="absolute right-0 top-12 z-30 min-w-48 rounded-xl border border-[#d5e3f7] bg-white p-2 shadow-xl">
                 <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]">
                   <Icon name="profile" className="h-4 w-4 text-[#1a79d1]" />
-                  My Profile
+                  Channel Manager Profile
                 </button>
                 <button type="button" className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]">
                   <Icon name="settings" className="h-4 w-4 text-[#1a79d1]" />
@@ -635,7 +641,7 @@ function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadA
           </div>
 
           <div className="scroll-3d relative z-10 mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4 [transform-style:preserve-3d]">
-            {metricCards.map((card, index) => (
+            {metricCards.map((card) => (
               <article
                 key={card.title}
                 className="metric-card group rounded-2xl border border-white/65 bg-white/70 p-5 shadow-xl shadow-[#2f3fa9]/10 backdrop-blur-xl [transform-style:preserve-3d]"

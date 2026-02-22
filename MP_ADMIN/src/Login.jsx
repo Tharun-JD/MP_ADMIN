@@ -17,12 +17,6 @@ function Login({ onSignIn }) {
   const shardRefs = useRef([])
 
   useEffect(() => {
-    setEmail('')
-    setPassword('')
-    setRemember(true)
-  }, [])
-
-  useEffect(() => {
     if (!window.gsap) {
       return
     }

@@ -18,9 +18,6 @@ const addUserOptions = [
   'Add Channel Partner Head',
   'Add GRE or Pre-sales',
   'Add Billing Team',
-  'Add Customer Account',
-  'Add Employee',
-  'Add Management User',
 ]
 
 const exportOptions = ['All Export', 'Active Filter Export']
@@ -50,11 +47,20 @@ function IconFilter() {
   )
 }
 
-function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onSignOut }) {
+function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onOpenEmails, onOpenSms, onSignOut }) {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+  const [isAddUserFormOpen, setIsAddUserFormOpen] = useState(false)
+  const [selectedAddUserRole, setSelectedAddUserRole] = useState('Add Superadmin')
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [addUserFormValues, setAddUserFormValues] = useState({
+    firstName: '',
+    lastName: '',
+    email: '',
+    phone: '',
+    timeZone: '(GMT+05:30) Mumbai',
+  })
   const [filterValues, setFilterValues] = useState({
     nameEmailPhone: '',
     sellDoLeadId: '',
@@ -70,6 +76,7 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
   const rowRefs = useRef([])
   const beamRef = useRef(null)
   const addUserMenuRef = useRef(null)
+  const addUserFormRef = useRef(null)
   const exportMenuRef = useRef(null)
   const filterPanelRef = useRef(null)
   const confirmationMenuRef = useRef(null)
@@ -78,6 +85,9 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
     const onPointerDown = (event) => {
       if (addUserMenuRef.current && !addUserMenuRef.current.contains(event.target)) {
         setIsAddUserOpen(false)
+      }
+      if (addUserFormRef.current && !addUserFormRef.current.contains(event.target)) {
+        setIsAddUserFormOpen(false)
       }
       if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
         setIsExportOpen(false)
@@ -107,6 +117,31 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
   }, [isAddUserOpen])
 
   useEffect(() => {
+    if (!window.gsap || !isAddUserFormOpen || !addUserFormRef.current) {
+      return
+    }
+
+    const gsap = window.gsap
+    const panel = addUserFormRef.current
+    const fields = panel.querySelectorAll('.ua-add-user-field')
+    const actions = panel.querySelectorAll('.ua-add-user-action')
+
+    const tl = gsap.timeline({ defaults: { ease: 'power3.out' } })
+    tl
+      .fromTo('.ua-add-user-overlay', { opacity: 0 }, { opacity: 1, duration: 0.22 })
+      .fromTo(
+        panel,
+        { y: 26, opacity: 0, scale: 1.05, rotateX: -6, transformOrigin: '50% 0%' },
+        { y: 0, opacity: 1, scale: 1, rotateX: 0, duration: 0.4 },
+        '-=0.05',
+      )
+      .fromTo(fields, { y: 10, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.04, duration: 0.2 }, '-=0.2')
+      .fromTo(actions, { y: 8, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.06, duration: 0.2 }, '-=0.12')
+
+    return () => tl.kill()
+  }, [isAddUserFormOpen])
+
+  useEffect(() => {
     if (!window.gsap || !isFilterOpen || !filterPanelRef.current) {
       return
     }
@@ -128,6 +163,20 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
 
   const setFilterField = (field, value) => {
     setFilterValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const setAddUserField = (field, value) => {
+    setAddUserFormValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const resetAddUserForm = () => {
+    setAddUserFormValues({
+      firstName: '',
+      lastName: '',
+      email: '',
+      phone: '',
+      timeZone: '(GMT+05:30) Mumbai',
+    })
   }
 
   const resetFilter = () => {
@@ -299,6 +348,8 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
         onOpenUserAccount={onOpenUserAccount}
         onOpenLeadActive={onOpenLeadActive}
         onOpenChannelPartners={onOpenChannelPartners}
+        onOpenEmails={onOpenEmails}
+        onOpenSms={onOpenSms}
         onSignOut={onSignOut}
       />
 
@@ -331,7 +382,12 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
                     <button
                       key={option}
                       type="button"
-                      onClick={() => setIsAddUserOpen(false)}
+                      onClick={() => {
+                        setIsAddUserOpen(false)
+                        setSelectedAddUserRole(option)
+                        resetAddUserForm()
+                        setIsAddUserFormOpen(true)
+                      }}
                       className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#2f3e57] transition hover:bg-[#e8f1ff] hover:text-[#124785]"
                     >
                       {option}
@@ -485,6 +541,92 @@ function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, o
                   className="ua-filter-action rounded-lg bg-gradient-to-r from-[#6f73ff] to-[#6a6eea] px-7 py-2 text-xl font-semibold text-white transition hover:brightness-105"
                 >
                   Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {isAddUserFormOpen && (
+          <div className="ua-add-user-overlay fixed inset-0 z-[290] flex items-center justify-center bg-[#0f2244]/30 px-4 py-6 backdrop-blur-[2px]">
+            <div ref={addUserFormRef} className="max-h-[92vh] w-full max-w-5xl overflow-hidden rounded-xl border border-[#8f7bf6]/40 bg-[#f4f6fb] shadow-2xl shadow-[#1a1f5f]/35">
+              <div className="flex items-center justify-between bg-[linear-gradient(90deg,#6f7df3_0%,#9d67df_100%)] px-5 py-4">
+                <h2 className="ua-add-user-field text-3xl font-semibold text-white">{selectedAddUserRole}</h2>
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserFormOpen(false)}
+                  className="ua-add-user-field text-4xl font-bold leading-none text-white/80 transition hover:text-white"
+                >
+                  X
+                </button>
+              </div>
+
+              <div className="grid gap-5 p-5 md:grid-cols-2">
+                <div className="ua-add-user-field space-y-2">
+                  <label className="text-base font-semibold text-[#1f3557]">First name <span className="text-[#e54848]">*</span></label>
+                  <input
+                    type="text"
+                    value={addUserFormValues.firstName}
+                    onChange={(event) => setAddUserField('firstName', event.target.value)}
+                    className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-lg text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                  />
+                </div>
+
+                <div className="ua-add-user-field space-y-2">
+                  <label className="text-base font-semibold text-[#1f3557]">Last name <span className="text-[#e54848]">*</span></label>
+                  <input
+                    type="text"
+                    value={addUserFormValues.lastName}
+                    onChange={(event) => setAddUserField('lastName', event.target.value)}
+                    className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-lg text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                  />
+                </div>
+
+                <div className="ua-add-user-field space-y-2">
+                  <label className="text-base font-semibold text-[#1f3557]">Email <span className="text-[#e54848]">*</span></label>
+                  <input
+                    type="email"
+                    value={addUserFormValues.email}
+                    onChange={(event) => setAddUserField('email', event.target.value)}
+                    className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-lg text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                  />
+                </div>
+
+                <div className="ua-add-user-field space-y-2">
+                  <label className="text-base font-semibold text-[#1f3557]">Phone <span className="text-[#e54848]">*</span></label>
+                  <div className="flex items-center rounded-md border border-[#c6d4ea] bg-white px-3 py-2.5">
+                    <span className="text-lg">🇮🇳</span>
+                    <span className="mx-2 text-[#61708a]">▼</span>
+                    <input
+                      type="text"
+                      value={addUserFormValues.phone}
+                      onChange={(event) => setAddUserField('phone', event.target.value)}
+                      className="w-full border-0 bg-transparent text-lg text-[#2d4568] outline-none"
+                    />
+                  </div>
+                </div>
+
+                <div className="ua-add-user-field space-y-2 md:col-span-1">
+                  <label className="text-base font-semibold text-[#1f3557]">User&apos;s Time Zone</label>
+                  <select
+                    value={addUserFormValues.timeZone}
+                    onChange={(event) => setAddUserField('timeZone', event.target.value)}
+                    className="w-full rounded-md border border-[#c6d4ea] bg-white px-4 py-2.5 text-lg text-[#2d4568] outline-none transition focus:border-[#7d88ff] focus:ring-2 focus:ring-[#7d88ff]/25"
+                  >
+                    <option>(GMT+05:30) Mumbai</option>
+                    <option>(GMT+00:00) London</option>
+                    <option>(GMT-05:00) New York</option>
+                  </select>
+                </div>
+              </div>
+
+              <div className="flex justify-end border-t border-[#d2dbee] bg-white/75 px-5 py-4">
+                <button
+                  type="button"
+                  onClick={() => setIsAddUserFormOpen(false)}
+                  className="ua-add-user-action rounded-md bg-[#1d73ce] px-5 py-2 text-lg font-semibold text-white transition hover:brightness-110"
+                >
+                  Save
                 </button>
               </div>
             </div>

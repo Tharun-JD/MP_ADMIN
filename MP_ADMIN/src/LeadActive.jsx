@@ -34,7 +34,7 @@ function IconFilter() {
   )
 }
 
-function LeadActive({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onSignOut }) {
+function LeadActive({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onOpenEmails, onOpenSms, onSignOut }) {
   const [isExportOpen, setIsExportOpen] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [isCountStatusOpen, setIsCountStatusOpen] = useState(false)
@@ -160,6 +160,8 @@ function LeadActive({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, on
         onOpenUserAccount={onOpenUserAccount}
         onOpenLeadActive={onOpenLeadActive}
         onOpenChannelPartners={onOpenChannelPartners}
+        onOpenEmails={onOpenEmails}
+        onOpenSms={onOpenSms}
         onSignOut={onSignOut}
       />
 
