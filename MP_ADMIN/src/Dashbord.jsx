@@ -76,7 +76,7 @@ const navItems = [
   },
 ]
 
-function Dashbord({ onSignOut, onOpenUserAccount, onOpenChannelPartners }) {
+function Dashbord({ onSignOut, onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners }) {
   const [openMenu, setOpenMenu] = useState(null)
   const [openWelcome, setOpenWelcome] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -494,11 +494,11 @@ function Dashbord({ onSignOut, onOpenUserAccount, onOpenChannelPartners }) {
                     setOpenWelcome(false)
                     if (item.label === 'More') {
                       setOpenMenu((current) => (current === item.label ? null : item.label))
-                    } else if (item.label === 'UserAccount' && onOpenUserAccount) {
-                      setOpenMenu(null)
-                      onOpenUserAccount()
                     } else {
                       setOpenMenu(null)
+                      if (item.label === 'Dashbord') onBackToDashboard?.()
+                      if (item.label === 'UserAccount') onOpenUserAccount?.()
+                      if (item.label === 'Lead Activity') onOpenLeadActive?.()
                     }
                   }}
                   className="nav-btn flex items-center gap-1.5 rounded-lg border border-[#2f3fa9]/15 bg-white px-3 py-2 text-sm font-semibold text-[#1a3c6b] transition hover:border-[#1a79d1]/50 hover:text-[#1a79d1]"

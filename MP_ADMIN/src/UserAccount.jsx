@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react'
+import Navbar from './Navbar.jsx'
 
 const accounts = [
   { id: 'row-1' },
@@ -21,6 +22,9 @@ const addUserOptions = [
   'Add Employee',
   'Add Management User',
 ]
+
+const exportOptions = ['All Export', 'Active Filter Export']
+const confirmationOptions = ['Confirmed', 'Not Confirmed']
 
 function IconUsers() {
   return (
@@ -46,8 +50,18 @@ function IconFilter() {
   )
 }
 
-function UserAccount() {
+function UserAccount({ onBackToDashboard, onOpenUserAccount, onOpenLeadActive, onOpenChannelPartners, onSignOut }) {
   const [isAddUserOpen, setIsAddUserOpen] = useState(false)
+  const [isExportOpen, setIsExportOpen] = useState(false)
+  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const [isConfirmationOpen, setIsConfirmationOpen] = useState(false)
+  const [filterValues, setFilterValues] = useState({
+    nameEmailPhone: '',
+    sellDoLeadId: '',
+    role: '',
+    confirmation: 'Select',
+    registeredAt: '',
+  })
   const pageRef = useRef(null)
   const headerRef = useRef(null)
   const controlsRef = useRef(null)
@@ -56,14 +70,23 @@ function UserAccount() {
   const rowRefs = useRef([])
   const beamRef = useRef(null)
   const addUserMenuRef = useRef(null)
+  const exportMenuRef = useRef(null)
+  const filterPanelRef = useRef(null)
+  const confirmationMenuRef = useRef(null)
 
   useEffect(() => {
     const onPointerDown = (event) => {
-      if (!addUserMenuRef.current) {
-        return
-      }
-      if (!addUserMenuRef.current.contains(event.target)) {
+      if (addUserMenuRef.current && !addUserMenuRef.current.contains(event.target)) {
         setIsAddUserOpen(false)
+      }
+      if (exportMenuRef.current && !exportMenuRef.current.contains(event.target)) {
+        setIsExportOpen(false)
+      }
+      if (confirmationMenuRef.current && !confirmationMenuRef.current.contains(event.target)) {
+        setIsConfirmationOpen(false)
+      }
+      if (filterPanelRef.current && !filterPanelRef.current.contains(event.target)) {
+        setIsFilterOpen(false)
       }
     }
 
@@ -82,6 +105,42 @@ function UserAccount() {
       { y: 0, opacity: 1, scale: 1, duration: 0.22, ease: 'power2.out' },
     )
   }, [isAddUserOpen])
+
+  useEffect(() => {
+    if (!window.gsap || !isFilterOpen || !filterPanelRef.current) {
+      return
+    }
+
+    const gsap = window.gsap
+    const panel = filterPanelRef.current
+    const fields = panel.querySelectorAll('.ua-filter-field')
+    const actions = panel.querySelectorAll('.ua-filter-action')
+
+    const tl = gsap.timeline({ defaults: { ease: 'power2.out' } })
+    tl
+      .fromTo('.ua-filter-overlay', { opacity: 0 }, { opacity: 1, duration: 0.2 })
+      .fromTo(panel, { y: 14, opacity: 0, scale: 0.985 }, { y: 0, opacity: 1, scale: 1, duration: 0.28 }, '-=0.02')
+      .fromTo(fields, { y: 10, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.045, duration: 0.2 }, '-=0.18')
+      .fromTo(actions, { y: 8, opacity: 0 }, { y: 0, opacity: 1, stagger: 0.06, duration: 0.2 }, '-=0.12')
+
+    return () => tl.kill()
+  }, [isFilterOpen])
+
+  const setFilterField = (field, value) => {
+    setFilterValues((prev) => ({ ...prev, [field]: value }))
+  }
+
+  const resetFilter = () => {
+    setFilterValues({
+      nameEmailPhone: '',
+      sellDoLeadId: '',
+      role: '',
+      confirmation: 'Select',
+      registeredAt: '',
+    })
+    setIsConfirmationOpen(false)
+    setIsFilterOpen(false)
+  }
 
   useEffect(() => {
     if (!window.gsap) {
@@ -234,6 +293,15 @@ function UserAccount() {
         <div ref={beamRef} className="absolute left-0 top-12 h-40 w-[38rem] rotate-[-8deg] bg-gradient-to-r from-transparent via-[#2f3fa9]/28 to-transparent blur-2xl" />
       </div>
 
+      <Navbar
+        activePage="user-account"
+        onBackToDashboard={onBackToDashboard}
+        onOpenUserAccount={onOpenUserAccount}
+        onOpenLeadActive={onOpenLeadActive}
+        onOpenChannelPartners={onOpenChannelPartners}
+        onSignOut={onSignOut}
+      />
+
       <section className="relative z-10 mx-auto w-full max-w-7xl px-3 py-8 lg:px-6">
         <div ref={headerRef} className="relative z-40 flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-white/70 bg-white/75 px-4 py-4 shadow-xl shadow-[#2f3fa9]/10 backdrop-blur-xl">
           <h1 className="flex items-center gap-3 text-2xl font-semibold tracking-tight text-[#1f2f45] lg:text-3xl">
@@ -272,14 +340,156 @@ function UserAccount() {
                 </div>
               )}
             </div>
-            <button type="button" className="ua-control flex items-center gap-1 rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] px-5 py-2 text-base font-semibold text-white lg:text-lg">
-              Exports <IconChevron />
-            </button>
-            <button type="button" className="ua-control rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] p-2.5 text-white">
+            <div ref={exportMenuRef} className="relative">
+              <button
+                type="button"
+                onClick={() => setIsExportOpen((prev) => !prev)}
+                className="ua-control flex items-center gap-1 rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] px-5 py-2 text-base font-semibold text-white lg:text-lg"
+              >
+                Exports <IconChevron />
+              </button>
+              {isExportOpen && (
+                <div className="absolute left-0 top-12 z-[70] w-64 rounded-xl border border-[#d4e3f8] bg-[#f8fbff] p-2 shadow-2xl shadow-[#1e78c8]/25">
+                  {exportOptions.map((option) => (
+                    <button
+                      key={option}
+                      type="button"
+                      onClick={() => setIsExportOpen(false)}
+                      className="block w-full rounded-lg px-3 py-2 text-left text-sm font-medium text-[#2f3e57] transition hover:bg-[#e8f1ff] hover:text-[#124785]"
+                    >
+                      {option}
+                    </button>
+                  ))}
+                </div>
+              )}
+            </div>
+            <button
+              type="button"
+              onClick={() => {
+                setIsAddUserOpen(false)
+                setIsExportOpen(false)
+                setIsFilterOpen(true)
+              }}
+              className="ua-control rounded-lg border border-[#1e78c8]/45 bg-gradient-to-r from-[#124785] to-[#1e78c8] p-2.5 text-white"
+            >
               <IconFilter />
             </button>
           </div>
         </div>
+
+        {isFilterOpen && (
+          <div className="ua-filter-overlay fixed inset-0 z-[260] flex items-center justify-center bg-[#0f2244]/22 px-4 py-6 backdrop-blur-[2px]">
+            <div ref={filterPanelRef} className="w-full max-w-4xl rounded-xl border border-[#c9d3e8] bg-[#f7f9fd] shadow-2xl shadow-[#1f365d]/15">
+              <div className="flex items-center justify-between border-b border-[#cdd7ee] px-6 py-4">
+                <h2 className="text-2xl font-semibold text-[#20385f]">Filter</h2>
+              </div>
+
+              <div className="grid gap-6 px-6 py-6 md:grid-cols-2">
+                <div className="ua-filter-field space-y-2">
+                  <label className="text-sm font-semibold text-[#1f3558]">Name/Email/Phone</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      value={filterValues.nameEmailPhone}
+                      onChange={(event) => setFilterField('nameEmailPhone', event.target.value)}
+                      className="w-full rounded-md border border-[#b8c4d8] bg-white px-4 py-2.5 text-base text-[#1f2f45] outline-none transition focus:border-[#7f8cff] focus:ring-2 focus:ring-[#7f8cff]/20"
+                    />
+                    <span className="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-[#7a879a]">
+                      <IconChevron />
+                    </span>
+                  </div>
+                </div>
+
+                <div className="ua-filter-field space-y-2">
+                  <label className="text-sm font-semibold text-[#1f3558]">Sell.Do Lead ID</label>
+                  <input
+                    type="text"
+                    value={filterValues.sellDoLeadId}
+                    onChange={(event) => setFilterField('sellDoLeadId', event.target.value)}
+                    className="w-full rounded-md border border-[#b8c4d8] bg-white px-4 py-2.5 text-base text-[#1f2f45] outline-none transition focus:border-[#7f8cff] focus:ring-2 focus:ring-[#7f8cff]/20"
+                  />
+                </div>
+
+                <div className="ua-filter-field space-y-2">
+                  <label className="text-sm font-semibold text-[#1f3558]">Role</label>
+                  <div className="relative">
+                    <input
+                      type="text"
+                      placeholder="Select"
+                      value={filterValues.role}
+                      onChange={(event) => setFilterField('role', event.target.value)}
+                      className="w-full rounded-md border border-[#b8c4d8] bg-white px-4 py-2.5 text-base text-[#1f2f45] outline-none placeholder:text-[#6c7890] transition focus:border-[#7f8cff] focus:ring-2 focus:ring-[#7f8cff]/20"
+                    />
+                  </div>
+                </div>
+
+                <div ref={confirmationMenuRef} className="ua-filter-field space-y-2">
+                  <label className="text-sm font-semibold text-[#1f3558]">Confirmation</label>
+                  <div className="relative">
+                    <button
+                      type="button"
+                      onClick={() => setIsConfirmationOpen((prev) => !prev)}
+                      className="flex w-full items-center justify-between rounded-md border border-[#b8c4d8] bg-white px-4 py-2.5 text-left text-base text-[#1f2f45] transition hover:border-[#9fb0cc] focus:border-[#7f8cff]"
+                    >
+                      <span className={filterValues.confirmation === 'Select' ? 'text-[#5f6d82]' : ''}>{filterValues.confirmation}</span>
+                      <span className={`transition ${isConfirmationOpen ? 'rotate-180' : ''}`}>
+                        <IconChevron />
+                      </span>
+                    </button>
+                    {isConfirmationOpen && (
+                      <div className="absolute left-0 top-[calc(100%+0.15rem)] z-[300] w-full rounded-md border border-[#c7d0df] bg-white shadow-lg">
+                        {confirmationOptions.map((option) => (
+                          <button
+                            key={option}
+                            type="button"
+                            onClick={() => {
+                              setFilterField('confirmation', option)
+                              setIsConfirmationOpen(false)
+                            }}
+                            className="block w-full px-4 py-2 text-left text-base text-[#1f2f45] hover:bg-[#e7edf5]"
+                          >
+                            {option}
+                          </button>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                <div className="ua-filter-field space-y-2 md:col-span-2">
+                  <label className="text-sm font-semibold text-[#1f3558]">Registered At</label>
+                  <input
+                    type="text"
+                    placeholder="dd/mm/yyyy - dd/mm/yyyy"
+                    value={filterValues.registeredAt}
+                    onChange={(event) => setFilterField('registeredAt', event.target.value)}
+                    className="w-full rounded-md border border-[#b8c4d8] bg-white px-4 py-2.5 text-base text-[#1f2f45] outline-none placeholder:text-[#6c7890] transition focus:border-[#7f8cff] focus:ring-2 focus:ring-[#7f8cff]/20 md:max-w-[52%]"
+                  />
+                </div>
+              </div>
+
+              <div className="flex items-center justify-end gap-3 border-t border-[#cdd7ee] px-6 py-4">
+                <button
+                  type="button"
+                  onClick={resetFilter}
+                  className="ua-filter-action rounded-lg border border-[#6f73ff] bg-white px-6 py-2 text-xl font-semibold text-[#6f73ff] transition hover:bg-[#eef0ff]"
+                >
+                  Cancel
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsConfirmationOpen(false)
+                    setIsFilterOpen(false)
+                  }}
+                  className="ua-filter-action rounded-lg bg-gradient-to-r from-[#6f73ff] to-[#6a6eea] px-7 py-2 text-xl font-semibold text-white transition hover:brightness-105"
+                >
+                  Apply
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
 
         <div ref={tableRef} className="mt-6 overflow-hidden rounded-2xl border border-[#6d64f8]/20 bg-white/70 shadow-2xl shadow-[#2f3fa9]/12 backdrop-blur-xl">
           <div className="grid grid-cols-[2fr_1.4fr_1fr_0.8fr_0.8fr_0.8fr] bg-[linear-gradient(90deg,#124785_0%,#1e78c8_56%,#30a7c2_100%)] text-sm font-bold tracking-wide text-white lg:text-base">
