@@ -4,6 +4,7 @@ import './index.css'
 import Login from './Login.jsx'
 import Dashbord from './Dashbord.jsx'
 import UserAccount from './UserAccount.jsx'
+import Moreoption from './Moreoption.jsx'
 
 function RootApp() {
   const [isSignedIn, setIsSignedIn] = useState(() => localStorage.getItem('mp_admin_signed_in') === 'true')
@@ -29,7 +30,17 @@ function RootApp() {
     return <UserAccount />
   }
 
-  return <Dashbord onSignOut={handleSignOut} onOpenUserAccount={() => setActivePage('user-account')} />
+  if (activePage === 'channel-partners') {
+    return <Moreoption onBackToDashboard={() => setActivePage('dashboard')} />
+  }
+
+  return (
+    <Dashbord
+      onSignOut={handleSignOut}
+      onOpenUserAccount={() => setActivePage('user-account')}
+      onOpenChannelPartners={() => setActivePage('channel-partners')}
+    />
+  )
 }
 
 createRoot(document.getElementById('root')).render(

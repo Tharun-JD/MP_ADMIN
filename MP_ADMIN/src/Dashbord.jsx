@@ -69,14 +69,14 @@ const navItems = [
     label: 'More',
     icon: 'more',
     options: [
-      { label: 'Documents', icon: 'docs' },
-      { label: 'Vendors', icon: 'vendors' },
-      { label: 'Reports', icon: 'reports' },
+      { label: 'Channel Partner Application', icon: 'docs' },
+      { label: 'Emails', icon: 'reports' },
+      { label: 'SMSs', icon: 'reports' },
     ],
   },
 ]
 
-function Dashbord({ onSignOut, onOpenUserAccount }) {
+function Dashbord({ onSignOut, onOpenUserAccount, onOpenChannelPartners }) {
   const [openMenu, setOpenMenu] = useState(null)
   const [openWelcome, setOpenWelcome] = useState(false)
   const [isFilterOpen, setIsFilterOpen] = useState(false)
@@ -514,6 +514,12 @@ function Dashbord({ onSignOut, onOpenUserAccount }) {
                       <button
                         key={option.label}
                         type="button"
+                        onClick={() => {
+                          setOpenMenu(null)
+                          if (option.label === 'Channel Partner Application') {
+                            onOpenChannelPartners?.()
+                          }
+                        }}
                         className="flex w-full items-center gap-2 rounded-lg px-3 py-2 text-left text-sm text-[#274873] hover:bg-[#eef5ff]"
                       >
                         <Icon name={option.icon} className="h-4 w-4 text-[#1a79d1]" />
